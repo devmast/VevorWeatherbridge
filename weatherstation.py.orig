@@ -17,19 +17,19 @@ DEVICE_ID = os.environ.get("DEVICE_ID", "weather_station")
 DEVICE_NAME = os.environ.get("DEVICE_NAME", "Weather Station")
 DEVICE_MANUFACTURER = os.environ.get("DEVICE_MANUFACTURER", "VEVOR")
 DEVICE_MODEL = os.environ.get("DEVICE_MODEL", "7-in-1 Weather Station")
-TIMEZONE = os.environ.get("TZ", "Europe/Berlin")
-UNITS = os.environ.get("UNITS", "metric").lower()
-WU_FORWARD = os.environ.get("WU_FORWARD", "false").lower() == "true"
+TIMEZONE = os.environ.get("TZ", "America/New_York")
+UNITS = os.environ.get("UNITS", "freedom_units").lower()
+WU_FORWARD = "false" #os.environ.get("WU_FORWARD", "false").lower() == "true"
 WU_USERNAME = os.environ.get("WU_USERNAME")
 WU_PASSWORD = os.environ.get("WU_PASSWORD")
 
 app = Flask(__name__)
 
-mqtt_client = mqtt.Client()
-if MQTT_USER:
-    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
-mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
-mqtt_client.loop_start()
+# mqtt_client = mqtt.Client()
+# if MQTT_USER:
+#     mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+# mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
+# mqtt_client.loop_start()
 
 def f_to_c(f): return round((float(f) - 32) * 5.0 / 9.0, 1)
 def inhg_to_hpa(inhg): return round(float(inhg) * 33.8639, 1)
@@ -105,49 +105,51 @@ def update():
             local_time = dt.strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
             local_time = dateutc  # fallback
+    
+    print(f"Received data at {local_time}: {attributes}")
 
-    # Publish each sensor to MQTT using HA auto-discovery
-    for name, data in attributes.items():
-        if data["value"] is None:
-            continue
-        sensor_id = name.lower().replace(" ", "_")
-        base = f"{MQTT_PREFIX}/sensor/{DEVICE_ID}_{sensor_id}"
-        state_topic = f"{base}/state"
-        attr_topic = f"{base}/attributes"
-        config_topic = f"{base}/config"
-        config_payload = {
-            "name": f"{DEVICE_NAME} {name}",
-            "state_topic": state_topic,
-            "unit_of_measurement": data["unit"],
-            "device_class": data["device_class"],
-            "unique_id": f"{DEVICE_ID}_{sensor_id}",
-            "json_attributes_topic": attr_topic,
-            "device": {
-                "identifiers": [DEVICE_ID],
-                "name": DEVICE_NAME,
-                "manufacturer": DEVICE_MANUFACTURER,
-                "model": DEVICE_MODEL,
-            },
-        }
-        mqtt_client.publish(config_topic, json.dumps(config_payload), retain=True)
-        mqtt_client.publish(state_topic, str(data["value"]), retain=True)
-        mqtt_client.publish(attr_topic, json.dumps({"measured_on": local_time}), retain=True)
+    # # Publish each sensor to MQTT using HA auto-discovery
+    # for name, data in attributes.items():
+    #     if data["value"] is None:
+    #         continue
+    #     sensor_id = name.lower().replace(" ", "_")
+    #     base = f"{MQTT_PREFIX}/sensor/{DEVICE_ID}_{sensor_id}"
+    #     state_topic = f"{base}/state"
+    #     attr_topic = f"{base}/attributes"
+    #     config_topic = f"{base}/config"
+    #     config_payload = {
+    #         "name": f"{DEVICE_NAME} {name}",
+    #         "state_topic": state_topic,
+    #         "unit_of_measurement": data["unit"],
+    #         "device_class": data["device_class"],
+    #         "unique_id": f"{DEVICE_ID}_{sensor_id}",
+    #         "json_attributes_topic": attr_topic,
+    #         "device": {
+    #             "identifiers": [DEVICE_ID],
+    #             "name": DEVICE_NAME,
+    #             "manufacturer": DEVICE_MANUFACTURER,
+    #             "model": DEVICE_MODEL,
+    #         },
+    #     }
+    #     mqtt_client.publish(config_topic, json.dumps(config_payload), retain=True)
+    #     mqtt_client.publish(state_topic, str(data["value"]), retain=True)
+    #     mqtt_client.publish(attr_topic, json.dumps({"measured_on": local_time}), retain=True)
 
-    if WU_FORWARD:
-        params = request.args.to_dict(flat=True)
-        if WU_USERNAME:
-            params["ID"] = WU_USERNAME
-        if WU_PASSWORD:
-            params["PASSWORD"] = WU_PASSWORD
-        try:
-            resolver = dns.resolver.Resolver()
-            resolver.nameservers = ["8.8.8.8", "8.8.4.4"]
-            wu_ip = resolver.resolve("rtupdate.wunderground.com")[0].to_text()
-            url = f"http://{wu_ip}/weatherstation/updateweatherstation.php"
-            headers = {"Host": "rtupdate.wunderground.com"}
-            requests.get(url, params=params, headers=headers, timeout=5)
-        except Exception as e:
-            print(f"Failed to forward to Weather Underground: {e}")
+    # if WU_FORWARD:
+    #     params = request.args.to_dict(flat=True)
+    #     if WU_USERNAME:
+    #         params["ID"] = WU_USERNAME
+    #     if WU_PASSWORD:
+    #         params["PASSWORD"] = WU_PASSWORD
+    #     try:
+    #         resolver = dns.resolver.Resolver()
+    #         resolver.nameservers = ["8.8.8.8", "8.8.4.4"]
+    #         wu_ip = resolver.resolve("rtupdate.wunderground.com")[0].to_text()
+    #         url = f"http://{wu_ip}/weatherstation/updateweatherstation.php"
+    #         headers = {"Host": "rtupdate.wunderground.com"}
+    #         requests.get(url, params=params, headers=headers, timeout=5)
+    #     except Exception as e:
+    #         print(f"Failed to forward to Weather Underground: {e}")
 
     return "success", 200
 
