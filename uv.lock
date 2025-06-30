@@ -357,7 +357,7 @@ wheels = [
 [[package]]
 name = "vevorweatherprom"
 version = "0.0.1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "dnspython" },
     { name = "flask" },

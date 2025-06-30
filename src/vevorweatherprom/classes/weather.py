@@ -44,17 +44,20 @@ class SolarRadiation(BaseModel):
     value: Optional[float] = Field(None, description="Solar radiation in W/m²")
 
 class WeatherData(BaseModel):
-    barometric_pressure: BarometricPressure = Field(..., description="Barometric pressure data")
-    temperature: Temperature = Field(..., description="Temperature data")
-    humidity: Humidity = Field(..., description="Humidity data")
-    dew_point: DewPoint = Field(..., description="Dew point data")
-    rainfall: Rainfall = Field(..., description="Rainfall data")
-    daily_rainfall: DailyRainfall = Field(..., description="Daily rainfall data")
-    wind_direction: WindDirection = Field(..., description="Wind direction data")
-    wind_speed: WindSpeed = Field(..., description="Wind speed data")
-    wind_gust_speed: WindGustSpeed = Field(..., description="Wind gust speed data")
-    uv_index: UVIndex = Field(..., description="UV index data")
-    solar_radiation: SolarRadiation = Field(..., description="Solar radiation data")
+    id: str = Field(..., validation_alias="ID", description="Unique identifier for the weather station")
+    password: str = Field(..., validation_alias="PASSWORD", description="Password for the weather station")
+    dateutc: str = Field(..., validation_alias="dateutc", description="UTC date and time of the data in ISO 8601 format")
+    barometric_pressure: float = Field(..., validation_alias="baromin", strict=False, description="Barometric pressure data")
+    temperature: float = Field(..., validation_alias="tempf", description="Temperature data")
+    humidity: int = Field(..., validation_alias="humidity", description="Humidity data")
+    dew_point: float = Field(..., validation_alias="dewptf", description="Dew point data")
+    rainfall: float = Field(..., validation_alias="rainin", description="Rainfall data")
+    daily_rainfall: float = Field(..., validation_alias="dailyrainin", description="Daily rainfall data")
+    wind_direction: int = Field(..., validation_alias="winddir", description="Wind direction data")
+    wind_speed: float = Field(..., validation_alias="windspeedmph", description="Wind speed data")
+    wind_gust_speed: float = Field(..., validation_alias="windgustmph", description="Wind gust speed data")
+    uv_index: int = Field(..., validation_alias="UV", description="UV index data")
+    solar_radiation: float = Field(..., validation_alias="solarRadiation", description="Solar radiation data")
 
     # @computed_field
     # def local_time(self) -> str:
